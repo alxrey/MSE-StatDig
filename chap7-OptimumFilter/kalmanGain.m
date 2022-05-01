@@ -33,7 +33,9 @@ for k=2:N
     Pk1 = F*P(:,:,k-1)*F' + Qw;
 
     % Update
-    K(:,:,k) = Pk1*H'*inv(H*Pk1*H' + Qv);
+    %K(:,:,k) = Pk1*H'*inv(H*Pk1*H' + Qv);
+    % to avoid warning it's better to use the below one:
+    K(:,:,k) = Pk1*H'/(H*Pk1*H' + Qv);
     P(:,:,k) = (I - K(:,:,k)*H) * Pk1;
     xHat(:,k) = xHatk1 + K(:,:,k) * (z(:,k)-H*xHatk1);
 end
