@@ -1,4 +1,4 @@
-function [K,xHat,P] = kalmanGain(F, H, Qw, Qv, xHatInit, PInit, z)
+function [K,xHat,P] = kalmanGain(F, H, Qw, Qv, xHatInit, PInit, z, B, u)
 %MYKALMANGAIN
 % This function implements the stationnary Kalman filter with
 % State equation : x[n]=Fx[n-1]+w[n]
@@ -13,12 +13,12 @@ function [K,xHat,P] = kalmanGain(F, H, Qw, Qv, xHatInit, PInit, z)
 
 N = length(z);
 
-%B=0;
-%u=zeros(1,N);
+if nargin==7
+    B=0;
+    u=zeros(1,N);
+end
 
 [q, p] = size(H);
-% Nobs = q
-% Nstates = p
 
 P = zeros(p, p, N);
 P(:,:,1) = PInit;
@@ -29,7 +29,7 @@ I = eye(p);
 
 for k=2:N
     % Prediction
-    xHatk1 = F*xHat(:,k-1); % + B*u(n);
+    xHatk1 = F*xHat(:,k-1); % + B*u(k);
     Pk1 = F*P(:,:,k-1)*F' + Qw;
 
     % Update
