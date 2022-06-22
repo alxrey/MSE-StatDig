@@ -1,15 +1,22 @@
-function [K,xHat,P] = kalmanGain(F, H, Qw, Qv, xHatInit, PInit, z, B, u)
-%MYKALMANGAIN
-% This function implements the stationnary Kalman filter with
+function [K, xHat, P] = kalmanGain(F, H, Qw, Qv, xHatInit, PInit, z, B, u)
+%KALMANGAIN Computes gain of a stationnary Kalman filter
 % State equation : x[n]=Fx[n-1]+w[n]
 % Measurement equation : z[n]=Hx[n]+v[n]
-% F is the state transition matrix
-% H is the measurement matrix
-% Qw is the covariance matrix of w[n]
-% Qv is the covariance matrix of v[n]
-% xHatInit init state vector
-% PInit init covariance error
-% z measurement vector z[n]
+% Inputs:
+%   F         transition matrix                                       [pxp]
+%   H         measurement matrix
+%   Qw        covariance matrix of w[n]
+%   Qv        covariance matrix of v[n]
+%   xHatInit  initial condition of the state vector
+%   PInit     initial condition of the covariance error matrix
+%   z         measurements vector
+%   B         control input model matrix                              [pxI]
+%   u         known input                                             [Ix1]
+% Outputs:
+%   K         Kalman gain
+%   XHAT      estimation of x
+%   P         error covariance matrix
+
 
 N = length(z);
 
@@ -20,23 +27,26 @@ end
 
 [q, p] = size(H);
 
+% create matrices
 P = zeros(p, p, N);
-P(:,:,1) = PInit;
 K = zeros(p, q, N);
 xHat = zeros(p, N);
-xHat(:,1) = xHatInit;
 I = eye(p);
+
+% Set initial condition
+P(:,:,1) = PInit;
+xHat(:,1) = xHatInit;
 
 for k=2:N
     % Prediction
-    xHatk1 = F*xHat(:,k-1); % + B*u(k);
-    Pk1 = F*P(:,:,k-1)*F' + Qw;
+    xHatk1 = F*xHat(:,k-1) + B*u(k);    % xHatk1 = xHat[n|n-1]
+    Pk1 = F*P(:,:,k-1)*F' + Qw;         % Pk1 = P[n|n-1]
 
     % Update
-    %K(:,:,k) = Pk1*H'*inv(H*Pk1*H' + Qv);
+    K(:,:,k) = Pk1*H'*inv(H*Pk1*H' + Qv);
     % to avoid warning it's better to use the below one:
-    K(:,:,k) = Pk1*H'/(H*Pk1*H' + Qv);
+    %K(:,:,k) = Pk1*H'/(H*Pk1*H' + Qv);
     P(:,:,k) = (I - K(:,:,k)*H) * Pk1;
-    xHat(:,k) = xHatk1 + K(:,:,k) * (z(:,k)-H*xHatk1);
+    xHat(:,k) = xHatk1 + (K(:,:,k) * (z(:,k)-H*xHatk1));
 end
 end
